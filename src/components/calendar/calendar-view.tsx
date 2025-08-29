@@ -7,7 +7,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, Today } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { useEvents } from '@/hooks/use-events'
 import { formatDate } from '@/lib/utils'
 
@@ -80,7 +80,7 @@ export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) 
             <ChevronRight className="w-4 h-4" />
           </Button>
           <Button variant="outline" size="sm" onClick={handleToday}>
-            <Today className="w-4 h-4 mr-2" />
+            <Calendar className="w-4 h-4 mr-2" />
             Today
           </Button>
         </div>

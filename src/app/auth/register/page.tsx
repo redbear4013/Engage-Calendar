@@ -19,6 +19,7 @@ export default function RegisterPage() {
     country: ''
   })
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   
   const { signUp } = useAuth()
@@ -27,6 +28,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -50,9 +52,16 @@ export default function RegisterPage() {
       })
       
       if (error) {
-        setError(error)
+        if (error.includes('email')) {
+          setSuccess(error) // This is actually a success message for email confirmation
+        } else {
+          setError(error)
+        }
       } else {
-        router.push('/dashboard')
+        setSuccess('Account created successfully! Redirecting...')
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 1000)
       }
     } catch (err) {
       setError('An unexpected error occurred')
@@ -84,6 +93,12 @@ export default function RegisterPage() {
           {error && (
             <div className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md text-sm">
               {error}
+            </div>
+          )}
+          
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-md text-sm">
+              {success}
             </div>
           )}
           

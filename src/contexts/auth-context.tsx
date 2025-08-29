@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({
           id: data.id,
           email: data.email,
-          name: data.name || undefined,
+          name: data.full_name || undefined,
           city: data.city || undefined,
           country: data.country || undefined,
           createdAt: data.created_at,
@@ -104,23 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
-      // Create user profile in our users table
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: data.user.id,
-              email: credentials.email,
-              password_hash: '', // This will be handled by Supabase Auth
-              name: credentials.name,
-              city: credentials.city,
-              country: credentials.country,
-            },
-          ])
-
-        if (profileError) throw profileError
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        return { error: 'Please check your email and click the confirmation link to complete registration.' }
       }
+
+      // User profile will be created automatically by database trigger
+      // No need to manually insert into users table
 
       return {}
     } catch (error: any) {
@@ -139,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('users')
         .update({
-          name: updates.name,
+          full_name: updates.name,
           city: updates.city,
           country: updates.country,
           updated_at: new Date().toISOString(),
