@@ -60,13 +60,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data) {
         setProfile({
-          id: data.id,
-          email: data.email,
-          name: data.name || undefined,
-          city: data.city || undefined,
-          country: data.country || undefined,
-          createdAt: data.created_at,
-          updatedAt: data.updated_at,
+          id: (data as any).id,
+          email: (data as any).email,
+          name: (data as any).name || undefined,
+          city: (data as any).city || undefined,
+          country: (data as any).country || undefined,
+          createdAt: (data as any).created_at,
+          updatedAt: (data as any).updated_at,
         })
       }
     } catch (error) {
@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           city: updates.city,
           country: updates.country,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', user.id)
 
       if (error) throw error
