@@ -45,6 +45,18 @@ export function useEvents(options: UseEventsOptions = {}) {
         query = query
           .gte('start_time_utc', options.filters.dateRange.start.toISOString())
           .lte('start_time_utc', options.filters.dateRange.end.toISOString())
+      } else {
+        // Default: Only show events from 30 days ago to 1 year in the future
+        // This prevents showing very old events while allowing some past events
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+        
+        const oneYearFromNow = new Date()
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+        
+        query = query
+          .gte('start_time_utc', thirtyDaysAgo.toISOString())
+          .lte('start_time_utc', oneYearFromNow.toISOString())
       }
 
       const { data, error } = await query

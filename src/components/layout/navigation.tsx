@@ -12,7 +12,8 @@ import {
   User, 
   Menu,
   X,
-  LogOut 
+  LogOut,
+  Settings
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Calendar', href: '/dashboard', icon: Calendar },
   { name: 'Discover', href: '/dashboard/discover', icon: Search },
   { name: 'Saved Events', href: '/dashboard/saved', icon: Heart },
+  { name: 'Sources', href: '/dashboard/sources', icon: Settings },
   { name: 'Profile', href: '/dashboard/profile', icon: User },
 ]
 

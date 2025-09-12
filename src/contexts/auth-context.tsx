@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile({
           id: data.id,
           email: data.email,
-          name: data.full_name || undefined,
+          name: data.name || undefined,
           city: data.city || undefined,
           country: data.country || undefined,
           createdAt: data.created_at,
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('users')
         .update({
-          full_name: updates.name,
+          name: updates.name,
           city: updates.city,
           country: updates.country,
           updated_at: new Date().toISOString(),

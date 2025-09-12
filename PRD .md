@@ -1,42 +1,54 @@
-
-# Product Requirements Document (PRD) – Phase 1
+# Product Requirements Document (PRD) – Smart Calendar App (Phase 1 + Phase 1.5)
 
 ## Executive Summary
 
-The **Smart Calendar App** is an intelligent scheduling application with the long-term vision of proactively suggesting personalized activities and becoming the leading intelligent calendar.
-**Phase 1** will focus on a simple foundation: providing users with a clean calendar and event list populated from basic public sources. This ensures early validation of user interest and a scalable base for future advanced features.
+The **Smart Calendar App** is a calendar-first productivity tool with the vision of becoming the leading intelligent calendar.
+
+* **Phase 1 (MVP)**: Deliver a lean event aggregator and calendar with **RSS + NewsAPI events**, simple UI, saved events, and user accounts.
+* **Phase 1.5 (Fast-Follow)**: Add **My Tasks (local)**, **Google Calendar read-only sync**, and **browser push reminders** to close the UX gap with established players like Any.do.
 
 ---
 
-## Product Overview
+## Product Vision
 
-### Product Vision
+To help people discover and manage meaningful activities by combining a central event feed, saved calendar, and simple personal productivity tools — all in one intuitive app.
 
-To be the leading smart calendar that helps people discover and schedule meaningful activities.
+## Product Mission
 
-### Phase 1 Mission
+Simplify event discovery and personal scheduling with a lightweight web app that grows into a fully smart calendar platform.
 
-Deliver a **minimal but functional event calendar** that aggregates events from public feeds and news sources, allowing users to explore and save events in a simple, intuitive UI.
+---
 
-### Target Release
+## Release Targets
 
-* MVP: Q4 2025
+* **Phase 1 (MVP)**: Q4 2025
+* **Phase 1.5 (Fast-Follow)**: \~1–2 months after MVP
 
 ---
 
 ## Problem Statement
 
-Current problems users face:
+* **Fragmented discovery**: Local events are spread across websites and news feeds.
+* **Manual effort**: Traditional calendars require manual entry.
+* **Missed opportunities**: People miss events and forget commitments.
+* **Competitor gap**: Existing apps (Any.do) combine tasks + external calendars.
 
-* Difficulty finding local activities without searching multiple websites
-* Manual entry required in most calendar apps
-* Missed events due to fragmented discovery channels
+---
 
-**Phase 1 Solution:**
+## Our Solution
 
-* Aggregate events from **RSS feeds** and **NewsAPI** into a central calendar
-* Provide a **clean event list + calendar UI** for browsing and saving events
-* Support **user accounts** for personalization (favorites, filters), but **no AI recommendations yet**
+**Phase 1**:
+
+* Aggregate events from **RSS + NewsAPI**.
+* Provide **basic calendar & event list**.
+* Let users **save/favorite events**.
+* **Admin UI** for managing sources.
+
+**Phase 1.5**:
+
+* Add **lightweight “My Tasks”** (local list).
+* **Google Calendar read-only integration**.
+* **Browser push reminders** for saved events.
 
 ---
 
@@ -44,36 +56,63 @@ Current problems users face:
 
 ### Business Goals
 
-* Launch MVP quickly with simple, reliable event aggregation
-* Validate demand for local event discovery in a calendar-first interface
-* Build user base with **free access**
+* Launch fast with a lean MVP.
+* Validate demand for **event aggregation + calendar view**.
+* Grow user base via free tier.
 
 ### User Goals
 
-* Save time by seeing all events in one place
-* Quickly browse and filter events
-* Keep track of chosen activities in a personal calendar
+* Save time discovering events.
+* Keep personal schedule organized in one app.
+* Get reminders without heavy setup.
+* Optionally connect their Google Calendar.
 
 ---
 
-## User Personas
+## User Personas (simplified)
 
-**General City Users** (broad persona for Phase 1)
-
-* Age: 18–50
-* Location: Urban or suburban
-* Needs: Discover local events easily, save them to a personal calendar, avoid missing opportunities
-* Pain Points: Too many scattered event sources, manual calendar entry, lack of central view
+* **Urban Explorer**: wants to find local events easily.
+* **Busy Professional**: wants simple reminders + calendar overlay.
+* **Lightweight Planner**: wants a minimal task list integrated with events.
 
 ---
 
 ## User Stories
 
-* As a user, I want to sign up and manage a basic profile
-* As a user, I want to see a list/calendar of upcoming events aggregated from public feeds
-* As a user, I want to mark/save events to my personal view
-* As a user, I want to filter events by date and category
-* As a user, I want to search events easily
+**Auth & Onboarding**
+
+* As a user, I can register/login with email/password.
+* As a user, I can update profile basics (name, city, country).
+
+**Events**
+
+* As a user, I can browse upcoming events (RSS/NewsAPI).
+* As a user, I can search/filter events.
+* As a user, I can view event details.
+
+**Calendar (Saved Events)**
+
+* As a user, I can save an event to my calendar.
+* As a user, I can remove a saved event.
+
+**Tasks (Phase 1.5)**
+
+* As a user, I can create/edit/delete personal tasks.
+* As a user, I can see tasks alongside calendar events.
+
+**Google Integration (Phase 1.5)**
+
+* As a user, I can connect my Google Calendar read-only.
+* As a user, I can see my Google events overlaid with app events.
+
+**Notifications (Phase 1.5)**
+
+* As a user, I can receive browser push reminders for saved events.
+
+**Admin**
+
+* As an admin, I can add/remove RSS feed sources.
+* As an admin, I can trigger ingestion manually.
 
 ---
 
@@ -81,72 +120,93 @@ Current problems users face:
 
 **FR1: User Management**
 
-* Email/password sign-up
-* Basic profile (name, location)
-* Event favorites
+* Email/password auth (Supabase).
+* Profile update.
 
-**FR2: Calendar Interface**
+**FR2: Events**
 
-* Calendar in **month/week/day view**
-* Event list view
-* Display events from feeds
+* Ingest RSS + NewsAPI feeds.
+* Normalize and deduplicate.
+* Search/filter endpoints.
 
-**FR3: Event Aggregation**
+**FR3: Calendar (Saved Events)**
 
-* RSS feed integration
-* NewsAPI integration
-* Normalize data into unified schema (title, date, location, description, source URL)
+* CRUD for saved events.
+* Calendar UI (month/week/day).
 
-**FR4: Filtering/Search**
+**FR4: Tasks (Phase 1.5)**
 
-* Filter by category/date
-* Keyword search
+* CRUD for tasks.
+* Optional due date/time.
+
+**FR5: Google Calendar (Phase 1.5)**
+
+* OAuth PKCE read-only connection.
+* Sync upcoming 30 days.
+* Overlay events in calendar.
+
+**FR6: Notifications (Phase 1.5)**
+
+* Store PushSubscription.
+* Cron job sends notifications 30 min before start.
 
 ---
 
 ## Non-Functional Requirements
 
-* **Performance:** Page load <3s
-* **Security:** HTTPS, JWT authentication, bcrypt password storage
-* **Usability:** Simple, mobile-responsive design, clean interface
-* **Scalability:** Ready to expand data sources later
+* **Performance**: <3s page load, <200ms API responses.
+* **Scalability**: Postgres + Typesense handle 10k+ users.
+* **Security**: HTTPS, JWT, RLS, encrypted tokens.
+* **Usability**: Responsive PWA, FullCalendar UI.
 
 ---
 
-## Tech Stack (Phase 1)
+## Tech Stack
 
-* **Frontend:** Next.js + React, Tailwind UI
-* **Backend:** Node.js (NestJS)
-* **Database:** Supabase / Postgres
-* **Search:** Typesense
-* **Calendar UI:** FullCalendar
-* **Hosting:** Vercel (frontend), Supabase (backend/db)
+* **Frontend**: Next.js + React, Tailwind + shadcn/ui, FullCalendar.
+* **Backend**: Next.js API routes / NestJS (monolith).
+* **Database**: Supabase Postgres.
+* **Search**: Typesense.
+* **Jobs**: Vercel cron / Supabase Edge Functions.
 
 ---
 
 ## Monetization
 
-* **Phase 1:** Free app
-* **Future Phases:** Premium subscriptions for AI-powered recommendations, integrations, and advanced features
+* **Phase 1/1.5**: Free.
+* **Future**: Freemium (premium for AI recs, advanced integrations, group features).
 
 ---
 
-## Constraints & Risks
+## Constraints
 
-* Small dev team, limited budget
-* Reliance on availability of RSS feeds and NewsAPI
-* MVP must remain simple, avoid scope creep
-
----
-
-## Release Criteria – Phase 1
-
-* Users can create an account
-* Calendar and event list populated from RSS & NewsAPI
-* Events searchable & filterable
-* Events can be favorited/saved
-* Stable deployment with <3s load time
+* Limited budget + small dev team.
+* Must ship MVP in Q4 2025.
+* Use compliant sources (RSS, NewsAPI, Google OAuth).
 
 ---
 
-👉 This rewritten PRD keeps **the long-term vision intact**, but **Phase 1 is lean, testable, and achievable** with your specified stack.
+## Risks
+
+* API limits (NewsAPI quota, Google Calendar quotas).
+* User adoption may hinge on Google integration.
+* Push notifications vary by platform (iOS requires PWA install).
+
+---
+
+## Release Criteria
+
+**Phase 1**
+
+* Users can register/login.
+* Events appear from RSS/NewsAPI.
+* Events can be saved.
+* Calendar views work.
+
+**Phase 1.5**
+
+* Tasks module functional.
+* Google Calendar read-only works.
+* Browser push reminders delivered.
+
+---

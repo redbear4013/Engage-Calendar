@@ -11,14 +11,40 @@ import { cn } from '@/lib/utils'
 const eventCategories = [
   { id: 'local_events', name: 'Local Events' },
   { id: 'music', name: 'Music' },
+  { id: 'concert', name: 'Concerts' },
+  { id: 'show', name: 'Shows' },
   { id: 'arts_culture', name: 'Arts & Culture' },
+  { id: 'entertainment', name: 'Entertainment' },
   { id: 'food_drink', name: 'Food & Drink' },
+  { id: 'dining', name: 'Dining' },
   { id: 'sports', name: 'Sports' },
   { id: 'outdoors', name: 'Outdoors' },
   { id: 'nightlife', name: 'Nightlife' },
   { id: 'community', name: 'Community' },
   { id: 'business', name: 'Business' },
+  { id: 'mice', name: 'MICE' },
+  { id: 'exhibition', name: 'Exhibitions' },
+  { id: 'convention', name: 'Conventions' },
   { id: 'family', name: 'Family' },
+  { id: 'cultural', name: 'Cultural' },
+  { id: 'festivals', name: 'Festivals' },
+]
+
+const macauVenues = [
+  { id: 'londoner', name: 'The Londoner Macao' },
+  { id: 'venetian', name: 'The Venetian Macao' },
+  { id: 'galaxy', name: 'Galaxy Macau' },
+  { id: 'mgto', name: 'MGTO Events' },
+  { id: 'mice', name: 'MICE Venues' },
+]
+
+const cityOptions = [
+  'Macau',
+  'New York',
+  'Los Angeles', 
+  'Chicago',
+  'Houston',
+  'Phoenix'
 ]
 
 interface EventFiltersProps {
@@ -28,6 +54,7 @@ interface EventFiltersProps {
 export function EventFilters({ onFiltersChange }: EventFiltersProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [selectedVenues, setSelectedVenues] = useState<string[]>([])
   const [cityFilter, setCityFilter] = useState('')
   const [dateRange, setDateRange] = useState({
     start: '',
@@ -44,6 +71,26 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
       onFiltersChange?.({
         searchQuery,
         categories: updated,
+        venues: selectedVenues,
+        city: cityFilter,
+        dateRange: dateRange.start && dateRange.end ? dateRange : undefined
+      })
+      
+      return updated
+    })
+  }
+
+  const handleVenueToggle = (venueId: string) => {
+    setSelectedVenues(prev => {
+      const updated = prev.includes(venueId)
+        ? prev.filter(id => id !== venueId)
+        : [...prev, venueId]
+      
+      // Call callback if provided
+      onFiltersChange?.({
+        searchQuery,
+        categories: selectedCategories,
+        venues: updated,
         city: cityFilter,
         dateRange: dateRange.start && dateRange.end ? dateRange : undefined
       })
@@ -57,6 +104,7 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
     onFiltersChange?.({
       searchQuery: value,
       categories: selectedCategories,
+      venues: selectedVenues,
       city: cityFilter,
       dateRange: dateRange.start && dateRange.end ? dateRange : undefined
     })
@@ -67,6 +115,7 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
     onFiltersChange?.({
       searchQuery,
       categories: selectedCategories,
+      venues: selectedVenues,
       city: value,
       dateRange: dateRange.start && dateRange.end ? dateRange : undefined
     })
@@ -79,6 +128,7 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
     onFiltersChange?.({
       searchQuery,
       categories: selectedCategories,
+      venues: selectedVenues,
       city: cityFilter,
       dateRange: updated.start && updated.end ? updated : undefined
     })
@@ -87,11 +137,13 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
   const clearAllFilters = () => {
     setSearchQuery('')
     setSelectedCategories([])
+    setSelectedVenues([])
     setCityFilter('')
     setDateRange({ start: '', end: '' })
     onFiltersChange?.({
       searchQuery: '',
       categories: [],
+      venues: [],
       city: '',
       dateRange: undefined
     })
@@ -100,6 +152,7 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
   const activeFiltersCount = [
     searchQuery,
     ...selectedCategories,
+    ...selectedVenues,
     cityFilter,
     dateRange.start && dateRange.end ? 'dateRange' : ''
   ].filter(Boolean).length
@@ -121,12 +174,16 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
       <div className="grid md:grid-cols-3 gap-4">
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="City"
+          <select
             value={cityFilter}
             onChange={(e) => handleCityChange(e.target.value)}
-            className="pl-10"
-          />
+            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          >
+            <option value="">All Cities</option>
+            {cityOptions.map(city => (
+              <option key={city} value={city}>{city}</option>
+            ))}
+          </select>
         </div>
         <div className="relative">
           <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -163,6 +220,26 @@ export function EventFilters({ onFiltersChange }: EventFiltersProps) {
             >
               {category.name}
               {selectedCategories.includes(category.id) && (
+                <X className="w-3 h-3 ml-1" />
+              )}
+            </Badge>
+          ))}
+        </div>
+      </div>
+
+      {/* Macau Venues */}
+      <div>
+        <h3 className="text-sm font-medium mb-3">Macau Venues</h3>
+        <div className="flex flex-wrap gap-2">
+          {macauVenues.map((venue) => (
+            <Badge
+              key={venue.id}
+              variant={selectedVenues.includes(venue.id) ? "default" : "outline"}
+              className="cursor-pointer hover:bg-primary/10 transition-colors"
+              onClick={() => handleVenueToggle(venue.id)}
+            >
+              {venue.name}
+              {selectedVenues.includes(venue.id) && (
                 <X className="w-3 h-3 ml-1" />
               )}
             </Badge>

@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Development performance optimizations
+  ...(process.env.NODE_ENV === 'development' && {
+    experimental: {
+      optimizePackageImports: ['@supabase/supabase-js', '@tanstack/react-query']
+    }
+  }),
   images: {
     domains: [
       'localhost',

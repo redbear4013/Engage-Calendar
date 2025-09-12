@@ -19,7 +19,7 @@ CREATE TABLE users (
 -- Create events table
 CREATE TABLE events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  source TEXT NOT NULL CHECK (source IN ('rss', 'newsapi')),
+  source TEXT NOT NULL CHECK (source IN ('rss', 'newsapi', 'web_scraper')),
   source_id TEXT NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
@@ -53,8 +53,8 @@ CREATE TABLE saved_events (
 
 -- Create sources table
 CREATE TABLE sources (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  type TEXT NOT NULL CHECK (type IN ('rss','newsapi')),
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL CHECK (type IN ('rss','newsapi','web_scraper')),
   name TEXT NOT NULL,
   url TEXT,
   active BOOLEAN DEFAULT true,
@@ -65,7 +65,7 @@ CREATE TABLE sources (
 -- Create ingestion_logs table
 CREATE TABLE ingestion_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  source_id UUID REFERENCES sources(id),
+  source_id TEXT REFERENCES sources(id),
   status TEXT CHECK (status IN ('started','success','failed')),
   message TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
@@ -109,10 +109,10 @@ CREATE POLICY "Users can delete own saved events" ON saved_events
 -- These are public data that all authenticated users can read
 
 -- Insert some sample event sources
-INSERT INTO sources (type, name, url, active) VALUES
-  ('rss', 'Eventbrite Local Events', 'https://www.eventbrite.com/rss/organizer_list_events/12345', true),
-  ('rss', 'Meetup Tech Events', 'https://secure.meetup.com/topics/tech/rss', true),
-  ('newsapi', 'NewsAPI Events', null, true);
+INSERT INTO sources (id, type, name, url, active) VALUES
+  ('eventbrite-local', 'rss', 'Eventbrite Local Events', 'https://www.eventbrite.com/rss/organizer_list_events/12345', true),
+  ('meetup-tech', 'rss', 'Meetup Tech Events', 'https://secure.meetup.com/topics/tech/rss', true),
+  ('newsapi-events', 'newsapi', 'NewsAPI Events', null, true);
 
 -- Create a function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

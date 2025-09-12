@@ -1,6 +1,9 @@
-import { supabase } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase'
 import { parseRSSFeed } from '@/lib/rss-parser'
 import { fetchNewsAPIEvents } from '@/lib/newsapi-client'
+import { scrapeEventsFromWebsite } from '@/lib/web-scraper'
+import { scrapeMacauDailyStructuredEvents } from '@/lib/macau-daily-structured-scraper'
+import { macauCoordinator } from '@/lib/scrapers/macau-coordinator'
 import type { Event } from '@/types'
 
 interface IngestionResult {
@@ -21,8 +24,10 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
   }
 
   try {
+    const supabaseAdmin = createAdminClient()
+    
     // Get all active sources
-    const { data: sources, error } = await supabase
+    const { data: sources, error } = await supabaseAdmin
       .from('sources')
       .select('*')
       .eq('active', true)
@@ -40,7 +45,7 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
 
     // Process each source
     for (const source of sources) {
-      await logIngestionStart(source.id)
+      await logIngestionStart(supabaseAdmin, source.id)
 
       try {
         let events: Partial<Event>[] = []
@@ -49,10 +54,49 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
           events = await parseRSSFeed(source.url, source.name)
         } else if (source.type === 'newsapi') {
           events = await fetchNewsAPIEvents()
+        } else if (source.type === 'web_scraper') {
+          // Handle different web scraper types
+          if (source.url?.includes('macaodaily.com')) {
+            // Existing Macau Daily scraper
+            events = (await scrapeMacauDailyStructuredEvents()).events
+          } else if (['mgto', 'londoner', 'venetian', 'galaxy', 'mice', 'broadway'].includes(source.id)) {
+            // New Macau scrapers
+            try {
+              const rawEvents = await macauCoordinator.fetchEventsFromSource(
+                source.id as 'mgto' | 'londoner' | 'venetian' | 'galaxy' | 'mice' | 'broadway'
+              )
+              events = macauCoordinator.normalizeEvents(rawEvents)
+              console.log(`${source.id}: Normalized ${rawEvents.length} raw events to ${events.length} events`)
+            } catch (error) {
+              console.error(`Error with Macau scraper ${source.id}:`, error)
+              throw error
+            }
+          } else if (source.url) {
+            // Fallback to generic web scraper for other sources
+            const scrapingConfig = {
+              url: source.url,
+              sourceName: source.name,
+              selectors: {
+                eventContainer: '.event-item, .event, [data-event]',
+                title: 'h1, h2, h3, .event-title, .title',
+                description: '.description, .summary, .event-description',
+                date: '.date, .event-date, [data-date]',
+                time: '.time, .event-time, [data-time]',
+                venue: '.venue, .location, .event-venue',
+                city: '.city, .event-city, [data-city]',
+                country: '.country, .event-country, [data-country]',
+                image: 'img, .event-image, [data-image]',
+                link: 'a, .event-link, [data-link]',
+                organizer: '.organizer, .event-organizer, [data-organizer]'
+              },
+              timezone: 'America/New_York'
+            }
+            events = (await scrapeEventsFromWebsite(scrapingConfig)).events
+          }
         }
 
         if (events.length === 0) {
-          await logIngestionResult(source.id, 'success', 'No events found')
+          await logIngestionResult(supabaseAdmin, source.id, 'success', 'No events found')
           continue
         }
 
@@ -60,7 +104,7 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
         const batchSize = 10
         for (let i = 0; i < events.length; i += batchSize) {
           const batch = events.slice(i, i + batchSize)
-          const batchResult = await processBatch(batch)
+          const batchResult = await processBatch(supabaseAdmin, batch)
           
           results.eventsProcessed += batchResult.processed
           results.eventsAdded += batchResult.added
@@ -69,6 +113,7 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
         }
 
         await logIngestionResult(
+          supabaseAdmin,
           source.id, 
           'success', 
           `Processed ${events.length} events`
@@ -78,7 +123,7 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         results.success = false
         results.errors.push(`Source ${source.name}: ${errorMessage}`)
-        await logIngestionResult(source.id, 'failed', errorMessage)
+        await logIngestionResult(supabaseAdmin, source.id, 'failed', errorMessage)
       }
     }
 
@@ -90,7 +135,7 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
   }
 }
 
-async function processBatch(events: Partial<Event>[]): Promise<{
+async function processBatch(supabaseAdmin: any, events: Partial<Event>[]): Promise<{
   processed: number
   added: number
   updated: number
@@ -111,7 +156,7 @@ async function processBatch(events: Partial<Event>[]): Promise<{
       }
 
       // Check if event already exists
-      const { data: existingEvent } = await supabase
+      const { data: existingEvent } = await supabaseAdmin
         .from('events')
         .select('id')
         .eq('source', event.source)
@@ -120,7 +165,7 @@ async function processBatch(events: Partial<Event>[]): Promise<{
 
       if (existingEvent) {
         // Update existing event
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('events')
           .update({
             title: event.title,
@@ -150,7 +195,7 @@ async function processBatch(events: Partial<Event>[]): Promise<{
         }
       } else {
         // Insert new event
-        const { error } = await supabase
+        const { error } = await supabaseAdmin
           .from('events')
           .insert([{
             source: event.source!,
@@ -194,8 +239,8 @@ async function processBatch(events: Partial<Event>[]): Promise<{
   return result
 }
 
-async function logIngestionStart(sourceId: string): Promise<void> {
-  await supabase
+async function logIngestionStart(supabaseAdmin: any, sourceId: string): Promise<void> {
+  await supabaseAdmin
     .from('ingestion_logs')
     .insert([{
       source_id: sourceId,
@@ -205,11 +250,12 @@ async function logIngestionStart(sourceId: string): Promise<void> {
 }
 
 async function logIngestionResult(
+  supabaseAdmin: any,
   sourceId: string, 
   status: 'success' | 'failed', 
   message: string
 ): Promise<void> {
-  await supabase
+  await supabaseAdmin
     .from('ingestion_logs')
     .insert([{
       source_id: sourceId,
@@ -220,10 +266,11 @@ async function logIngestionResult(
 
 // Cleanup old events that haven't been seen in a while
 export async function cleanupStaleEvents(daysSinceLastSeen: number = 30): Promise<number> {
+  const supabaseAdmin = createAdminClient()
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - daysSinceLastSeen)
 
-  const { count, error } = await supabase
+  const { count, error } = await supabaseAdmin
     .from('events')
     .delete()
     .lt('last_seen_at', cutoffDate.toISOString())

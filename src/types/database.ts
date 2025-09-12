@@ -36,7 +36,7 @@ export interface Database {
       events: {
         Row: {
           id: string
-          source: 'rss' | 'newsapi'
+          source: 'rss' | 'newsapi' | 'web_scraper'
           source_id: string
           title: string
           description: string | null
@@ -127,7 +127,7 @@ export interface Database {
       sources: {
         Row: {
           id: string
-          type: 'rss' | 'newsapi'
+          type: 'rss' | 'newsapi' | 'web_scraper'
           name: string
           url: string | null
           active: boolean
@@ -136,7 +136,7 @@ export interface Database {
         }
         Insert: {
           id?: string
-          type: 'rss' | 'newsapi'
+          type: 'rss' | 'newsapi' | 'web_scraper'
           name: string
           url?: string | null
           active?: boolean
@@ -145,7 +145,7 @@ export interface Database {
         }
         Update: {
           id?: string
-          type?: 'rss' | 'newsapi'
+          type?: 'rss' | 'newsapi' | 'web_scraper'
           name?: string
           url?: string | null
           active?: boolean

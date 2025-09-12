@@ -10,7 +10,7 @@ export interface User {
 
 export interface Event {
   id: string
-  source: 'rss' | 'newsapi'
+  source: 'rss' | 'newsapi' | 'web_scraper'
   sourceId: string
   title: string
   description?: string

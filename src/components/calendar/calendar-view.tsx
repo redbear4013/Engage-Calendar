@@ -10,24 +10,39 @@ import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
 import { useEvents } from '@/hooks/use-events'
 import { formatDate } from '@/lib/utils'
+import { 
+  EventModal, 
+  EventModalBody, 
+  EventModalContent, 
+  EventModalFooter,
+  useEventModal
+} from '@/components/ui/event-modal'
+import type { CalendarEvent } from '@/types'
 
 interface CalendarViewProps {
   selectedDate: Date
   onDateSelect: (date: Date) => void
 }
 
-export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) {
+// Internal component that can access the modal context
+function CalendarContent({ selectedDate, onDateSelect }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar>(null)
   const { data: events = [], isLoading } = useEvents()
+  const { setOpen, setEventData } = useEventModal()
 
   const handleDateClick = useCallback((arg: any) => {
     onDateSelect(new Date(arg.date))
   }, [onDateSelect])
 
   const handleEventClick = useCallback((arg: any) => {
-    // TODO: Open event details modal
-    console.log('Event clicked:', arg.event)
-  }, [])
+    const eventId = arg.event.id
+    const event = events.find(e => e.id === eventId)
+    
+    if (event) {
+      setEventData(event)
+      setOpen(true)
+    }
+  }, [events, setEventData, setOpen])
 
   const handlePrevious = useCallback(() => {
     const calendarApi = calendarRef.current?.getApi()
@@ -131,5 +146,18 @@ export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) 
         )}
       </div>
     </Card>
+  )
+}
+
+// Main exported component with modal wrapper
+export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) {
+  return (
+    <EventModal>
+      <CalendarContent selectedDate={selectedDate} onDateSelect={onDateSelect} />
+      <EventModalBody>
+        <EventModalContent />
+        <EventModalFooter />
+      </EventModalBody>
+    </EventModal>
   )
 }
