@@ -1,13 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Disable TypeScript and ESLint build checks for deployment
+  // Temporarily disable TypeScript errors for deployment
+  // TODO: Fix Supabase type inference issues
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Development performance optimizations
+  // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
     experimental: {
       optimizePackageImports: ['@supabase/supabase-js', '@tanstack/react-query']

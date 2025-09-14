@@ -126,14 +126,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return { error: 'No user logged in' }
 
     try {
-      const { error } = await supabase
+      const updateData: Record<string, any> = {}
+      if (updates.name !== undefined) updateData.name = updates.name
+      if (updates.city !== undefined) updateData.city = updates.city
+      if (updates.country !== undefined) updateData.country = updates.country
+      updateData.updated_at = new Date().toISOString()
+
+      const { error } = await (supabase as any)
         .from('users')
-        .update({
-          name: updates.name,
-          city: updates.city,
-          country: updates.country,
-          updated_at: new Date().toISOString(),
-        } as any)
+        .update(updateData)
         .eq('id', user.id)
 
       if (error) throw error

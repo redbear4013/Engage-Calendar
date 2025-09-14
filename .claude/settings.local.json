@@ -48,7 +48,8 @@
       "Bash(PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install playwright)",
       "Bash(lsof:*)",
       "Bash(xargs kill:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(NODE_ENV=production npm run build)"
     ],
     "deny": [],
     "ask": []
