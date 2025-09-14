@@ -1,6 +1,7 @@
 import { BaseScraper } from '../base-scraper'
 import { RawEvent, RateLimitConfig, MacauScraper, ScraperError, ScraperErrorType } from '../types'
 import { parseMacauDate, createSourceId } from '../../date-macau'
+import type { AnyNode } from 'domhandler'
 
 const LONDONER_URL = 'https://www.londonermacao.com/macau-events-shows'
 const VENETIAN_URL = 'https://www.venetianmacao.com/entertainment.html'
@@ -192,7 +193,7 @@ export class SandsScraper extends BaseScraper implements MacauScraper {
     }
   }
 
-  private async parseEventElement($: cheerio.CheerioAPI, $element: cheerio.Cheerio<cheerio.Element>, index: number): Promise<RawEvent | null> {
+  private async parseEventElement($: cheerio.CheerioAPI, $element: cheerio.Cheerio<AnyNode>, index: number): Promise<RawEvent | null> {
     try {
       console.log(`🔬 ${this.venue}: Parsing event ${index + 1} - element text: "${$element.text().substring(0, 200)}..."`)
       

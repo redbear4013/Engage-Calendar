@@ -1,5 +1,7 @@
 import axios, { AxiosResponse } from 'axios'
 import * as cheerio from 'cheerio'
+import type { AnyNode } from 'domhandler'
+import { chromium, Browser, Page } from 'playwright'
 import { RateLimitConfig, ScraperRequestConfig, ScraperError, ScraperErrorType } from './types'
 
 /**
@@ -9,6 +11,7 @@ import { RateLimitConfig, ScraperRequestConfig, ScraperError, ScraperErrorType }
 export class BaseScraper {
   private lastRequestTime = 0
   private requestQueue: Promise<any> = Promise.resolve()
+  private browser: Browser | null = null
 
   constructor(private rateLimitConfig: RateLimitConfig) {}
 
@@ -70,14 +73,14 @@ export class BaseScraper {
   /**
    * Extract text content safely from Cheerio element
    */
-  safeText($element: cheerio.Cheerio<cheerio.Element>): string {
+  safeText($element: cheerio.Cheerio<AnyNode>): string {
     return this.cleanText($element.first().text() || '')
   }
 
   /**
    * Extract attribute value safely from Cheerio element
    */
-  safeAttr($element: cheerio.Cheerio<cheerio.Element>, attr: string): string | undefined {
+  safeAttr($element: cheerio.Cheerio<AnyNode>, attr: string): string | undefined {
     const value = $element.first().attr(attr)
     return value ? value.trim() : undefined
   }
@@ -175,7 +178,7 @@ export class BaseScraper {
   /**
    * Extract image URL from element using common selectors
    */
-  protected extractImageUrl($: cheerio.CheerioAPI, $element: cheerio.Cheerio<cheerio.Element>, baseUrl: string): string | undefined {
+  protected extractImageUrl($: cheerio.CheerioAPI, $element: cheerio.Cheerio<AnyNode>, baseUrl: string): string | undefined {
     const imageSelectors = [
       'img[src]',
       '.image img[src]',
@@ -316,5 +319,174 @@ export class BaseScraper {
     }
     
     return true
+  }
+
+  /**
+   * Initialize browser instance for JavaScript rendering
+   */
+  private async initializeBrowser(): Promise<Browser> {
+    if (!this.browser) {
+      try {
+        this.browser = await chromium.launch({
+          headless: true,
+          args: ['--no-sandbox', '--disable-setuid-sandbox'] // For Linux environments
+        })
+      } catch (error) {
+        throw new ScraperError(
+          ScraperErrorType.NETWORK_ERROR,
+          `Failed to initialize browser: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'browser',
+          error instanceof Error ? error : undefined
+        )
+      }
+    }
+    return this.browser
+  }
+
+  /**
+   * Make a browser-based request with JavaScript rendering
+   */
+  async makeBrowserRequest(config: ScraperRequestConfig & { 
+    waitForSelector?: string 
+    waitTimeout?: number
+  }): Promise<string> {
+    return this.requestQueue = this.requestQueue.then(async () => {
+      await this.enforceRateLimit()
+      return this.executeBrowserRequest(config)
+    })
+  }
+
+  /**
+   * Execute browser request with retries and error handling
+   */
+  private async executeBrowserRequest(config: ScraperRequestConfig & { 
+    waitForSelector?: string 
+    waitTimeout?: number
+  }): Promise<string> {
+    const { maxRetries, retryDelayMs } = this.rateLimitConfig
+    let lastError: Error | null = null
+    let page: Page | null = null
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const browser = await this.initializeBrowser()
+        page = await browser.newPage()
+
+        // Set user agent to mimic real browser
+        await page.setExtraHTTPHeaders({
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        })
+
+        // Navigate to page with timeout
+        const response = await page.goto(config.url, {
+          timeout: config.timeout || 30000,
+          waitUntil: 'domcontentloaded'
+        })
+
+        if (!response || response.status() >= 400) {
+          throw new ScraperError(
+            ScraperErrorType.INVALID_RESPONSE,
+            `HTTP ${response?.status()}: ${response?.statusText()}`,
+            config.url
+          )
+        }
+
+        // Wait for specific selector if provided
+        if (config.waitForSelector) {
+          try {
+            await page.waitForSelector(config.waitForSelector, {
+              timeout: config.waitTimeout || 10000
+            })
+          } catch (error) {
+            console.warn(`Selector "${config.waitForSelector}" not found, continuing anyway`)
+          }
+        }
+
+        // Get page content after JavaScript execution
+        const content = await page.content()
+        await page.close()
+
+        return content
+
+      } catch (error) {
+        lastError = error as Error
+        
+        if (page) {
+          await page.close().catch(() => {}) // Cleanup on error
+        }
+
+        // Don't retry on 4xx errors
+        if (error instanceof Error && error.message.includes('HTTP 4')) {
+          throw error
+        }
+
+        // Wait before retrying
+        if (attempt < maxRetries) {
+          await new Promise(resolve => 
+            setTimeout(resolve, retryDelayMs * Math.pow(2, attempt))
+          )
+        }
+      }
+    }
+
+    throw new ScraperError(
+      ScraperErrorType.NETWORK_ERROR,
+      `Browser request failed after ${maxRetries + 1} attempts: ${lastError?.message}`,
+      config.url,
+      lastError || undefined
+    )
+  }
+
+  /**
+   * Clean up browser instance
+   */
+  async cleanup(): Promise<void> {
+    if (this.browser) {
+      await this.browser.close()
+      this.browser = null
+    }
+  }
+
+
+  /**
+   * Hybrid scraping: try traditional HTTP first, fallback to browser if needed
+   */
+  async makeHybridRequest(config: ScraperRequestConfig & {
+    fallbackToBrowser?: boolean
+    waitForSelector?: string
+    minExpectedElements?: number
+  }): Promise<{ content: string, usedBrowser: boolean }> {
+    try {
+      // First try traditional HTTP request
+      const httpResponse = await this.makeRequest(config)
+      const $ = this.parseHtml(httpResponse.data)
+      
+      // Check if we got meaningful content
+      const hasContent = config.minExpectedElements ? 
+        $('*').length >= config.minExpectedElements :
+        httpResponse.data.length > 1000
+
+      if (hasContent && !config.fallbackToBrowser) {
+        return { content: httpResponse.data, usedBrowser: false }
+      }
+
+      // If content seems insufficient and browser fallback is enabled, use browser
+      if (config.fallbackToBrowser) {
+        console.log(`Traditional scraping found limited content, falling back to browser for: ${config.url}`)
+        const browserContent = await this.makeBrowserRequest(config)
+        return { content: browserContent, usedBrowser: true }
+      }
+
+      return { content: httpResponse.data, usedBrowser: false }
+
+    } catch (error) {
+      // If HTTP fails and browser fallback is enabled, try browser
+      if (config.fallbackToBrowser) {
+        console.log(`HTTP request failed, falling back to browser for: ${config.url}`)
+        const browserContent = await this.makeBrowserRequest(config)
+        return { content: browserContent, usedBrowser: true }
+      }
+      throw error
+    }
   }
 }

@@ -48,15 +48,21 @@ function CalendarContent({ selectedDate, onDateSelect }: CalendarViewProps) {
     const calendarApi = calendarRef.current?.getApi()
     if (calendarApi) {
       calendarApi.prev()
+      // keep header date in sync with current view
+      const d = calendarApi.getDate()
+      onDateSelect(new Date(d))
     }
-  }, [])
+  }, [onDateSelect])
 
   const handleNext = useCallback(() => {
     const calendarApi = calendarRef.current?.getApi()
     if (calendarApi) {
       calendarApi.next()
+      // keep header date in sync with current view
+      const d = calendarApi.getDate()
+      onDateSelect(new Date(d))
     }
-  }, [])
+  }, [onDateSelect])
 
   const handleToday = useCallback(() => {
     const calendarApi = calendarRef.current?.getApi()
@@ -128,6 +134,13 @@ function CalendarContent({ selectedDate, onDateSelect }: CalendarViewProps) {
             events={calendarEvents}
             dateClick={handleDateClick}
             eventClick={handleEventClick}
+            // Whenever the visible date range changes (prev/next/today or programmatic)
+            datesSet={(arg) => {
+              try {
+                const d = arg.view.calendar.getDate()
+                onDateSelect(new Date(d))
+              } catch {}
+            }}
             dayMaxEvents={3}
             moreLinkClick="popover"
             eventDisplay="block"

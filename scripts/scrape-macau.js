@@ -21,7 +21,7 @@ async function runScraper() {
     console.log('4. Check health: curl http://localhost:3000/api/health');
     console.log('');
     
-    const sources = ['mgto', 'londoner', 'venetian', 'galaxy', 'mice'];
+    const sources = ['mgto', 'londoner', 'venetian', 'galaxy', 'mice', 'broadway'];
     const requestedSource = process.argv[2];
     
     if (requestedSource && !sources.includes(requestedSource)) {
@@ -40,7 +40,8 @@ async function runScraper() {
           londoner: 'https://www.londonermacao.com/macau-events-shows',
           venetian: 'https://www.venetianmacao.com/entertainment.html',
           galaxy: 'https://www.galaxymacau.com/ticketing/event-list/',
-          mice: 'https://www.mice.gov.mo/en/events.aspx'
+          mice: 'https://www.mice.gov.mo/en/events.aspx',
+          broadway: 'https://www.broadwaymacau.com.mo/upcoming-events-and-concerts/'
         };
         console.log(`  • ${source}: ${urls[source]}`);
       });

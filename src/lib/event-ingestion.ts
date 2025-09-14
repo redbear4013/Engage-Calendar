@@ -14,7 +14,7 @@ interface IngestionResult {
   errors: string[]
 }
 
-export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
+export async function ingestEventsFromAllSources(sourceFilter?: string[] | null): Promise<IngestionResult> {
   const results: IngestionResult = {
     success: true,
     eventsProcessed: 0,
@@ -25,12 +25,19 @@ export async function ingestEventsFromAllSources(): Promise<IngestionResult> {
 
   try {
     const supabaseAdmin = createAdminClient()
-    
-    // Get all active sources
-    const { data: sources, error } = await supabaseAdmin
+
+    // Get active sources, optionally filtered by sourceFilter
+    let query = supabaseAdmin
       .from('sources')
       .select('*')
       .eq('active', true)
+
+    if (sourceFilter && sourceFilter.length > 0) {
+      query = query.in('id', sourceFilter)
+      console.log(`🎯 Filtering sources to: ${sourceFilter.join(', ')}`)
+    }
+
+    const { data: sources, error } = await query
 
     if (error) {
       results.success = false

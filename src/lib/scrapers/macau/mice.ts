@@ -1,6 +1,7 @@
 import { BaseScraper } from '../base-scraper'
 import { RawEvent, RateLimitConfig, MacauScraper, ScraperError, ScraperErrorType } from '../types'
 import { parseMacauDate, createSourceId } from '../../date-macau'
+import type { AnyNode } from 'domhandler'
 
 const BASE_URL = 'https://www.mice.gov.mo'
 const EVENTS_URL = 'https://www.mice.gov.mo/en/events.aspx'
@@ -100,7 +101,7 @@ export class MICEScraper extends BaseScraper implements MacauScraper {
     }
   }
 
-  private parseEventRow($: cheerio.CheerioAPI, $row: cheerio.Cheerio<cheerio.Element>, index: number): RawEvent | null {
+  private parseEventRow($: cheerio.CheerioAPI, $row: cheerio.Cheerio<AnyNode>, index: number): RawEvent | null {
     try {
       let title = ''
       let dateText = ''
@@ -197,7 +198,7 @@ export class MICEScraper extends BaseScraper implements MacauScraper {
         venue: venue,
         city: 'Macau',
         url: eventUrl,
-        image_url: this.extractImageUrl($, $element, BASE_URL),
+        image_url: this.extractImageUrl($, $row, BASE_URL),
         categories
       }
 

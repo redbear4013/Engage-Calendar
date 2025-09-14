@@ -1,6 +1,7 @@
 import { BaseScraper } from '../base-scraper'
 import { RawEvent, RateLimitConfig, MacauScraper, ScraperError, ScraperErrorType } from '../types'
 import { parseMacauDate, createSourceId } from '../../date-macau'
+import type { AnyNode } from 'domhandler'
 
 const BASE_URL = 'https://www.galaxymacau.com'
 const EVENTS_URL = 'https://www.galaxymacau.com/ticketing/event-list/'
@@ -114,7 +115,7 @@ export class GalaxyScraper extends BaseScraper implements MacauScraper {
     }
   }
 
-  private async parseEventElement($: cheerio.CheerioAPI, $element: cheerio.Cheerio<cheerio.Element>, index: number): Promise<RawEvent | null> {
+  private async parseEventElement($: cheerio.CheerioAPI, $element: cheerio.Cheerio<AnyNode>, index: number): Promise<RawEvent | null> {
     try {
       let title = ''
       let eventUrl = ''

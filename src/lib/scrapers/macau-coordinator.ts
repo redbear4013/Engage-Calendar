@@ -11,7 +11,7 @@ import type { Event } from '@/types'
  * Coordinates all Macau scrapers and normalizes their output
  */
 export class MacauCoordinator {
-  private scrapers = new Map([
+  private scrapers = new Map<string, any>([
     ['mgto', this.createMGTOScraper()],
     ['londoner', createLondonerScraper()],
     ['venetian', createVenetianScraper()],

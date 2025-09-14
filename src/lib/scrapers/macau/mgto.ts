@@ -1,6 +1,7 @@
 import { BaseScraper } from '../base-scraper'
 import { RawEvent, RateLimitConfig, MacauScraper, ScraperError, ScraperErrorType } from '../types'
 import { parseMacauDate, createSourceId } from '../../date-macau'
+import type { AnyNode } from 'domhandler'
 
 const BASE_URL = 'https://www.macaotourism.gov.mo'
 const EVENTS_URL = 'https://www.macaotourism.gov.mo/en/events/calendar'
@@ -133,7 +134,7 @@ export class MGTOScraper extends BaseScraper implements MacauScraper {
     }
   }
 
-  private async parseEventFromElement($: cheerio.CheerioAPI, $element: cheerio.Cheerio<cheerio.Element>, index: number): Promise<RawEvent | null> {
+  private async parseEventFromElement($: cheerio.CheerioAPI, $element: cheerio.Cheerio<AnyNode>, index: number): Promise<RawEvent | null> {
     try {
       // Handle both link elements and article/div elements
       const isLink = $element.is('a')

@@ -1,6 +1,7 @@
 import type { Event } from '@/types'
 import axios from 'axios'
 import * as cheerio from 'cheerio'
+import type { AnyNode } from 'domhandler'
 
 interface WebScrapingResult {
   success: boolean
@@ -124,7 +125,7 @@ export function parseHTMLForEvents(html: string, config: ScrapingConfig): Partia
     const $ = cheerio.load(html)
     
     // Try to find event containers
-    const eventContainers = $(config.selectors.eventContainer)
+    let eventContainers = $(config.selectors.eventContainer)
     
     if (eventContainers.length === 0) {
       // Fallback: look for common event patterns
@@ -169,7 +170,7 @@ export function parseHTMLForEvents(html: string, config: ScrapingConfig): Partia
   return events
 }
 
-function extractEventFromElement($element: cheerio.Cheerio<cheerio.Element>, config: ScrapingConfig, index: number): Partial<Event> {
+function extractEventFromElement($element: cheerio.Cheerio<AnyNode>, config: ScrapingConfig, index: number): Partial<Event> {
   const title = $element.find(config.selectors.title).first().text().trim()
   const description = $element.find(config.selectors.description).first().text().trim()
   const venue = $element.find(config.selectors.venue).first().text().trim()
@@ -207,7 +208,7 @@ function extractEventFromElement($element: cheerio.Cheerio<cheerio.Element>, con
   }
 }
 
-function extractEventsFromGeneralContent($: cheerio.CheerioAPI, $content: cheerio.Cheerio<cheerio.Element>, config: ScrapingConfig): Partial<Event>[] {
+function extractEventsFromGeneralContent($: cheerio.CheerioAPI, $content: cheerio.Cheerio<AnyNode>, config: ScrapingConfig): Partial<Event>[] {
   const events: Partial<Event>[] = []
   
   // Look for headings that might be event titles

@@ -69,6 +69,11 @@ export interface ScraperRequestConfig {
   headers?: Record<string, string>
   timeout?: number
   followRedirects?: boolean
+  // Browser automation options
+  fallbackToBrowser?: boolean
+  waitForSelector?: string
+  waitTimeout?: number
+  minExpectedElements?: number
 }
 
 /**
