@@ -89,6 +89,16 @@ function CalendarContent({ selectedDate, onDateSelect }: CalendarViewProps) {
     }
   }))
 
+  // Count events occurring in the currently selected month
+  const eventsThisMonth = events.filter(event => {
+    if (!event.startTime) return false
+    const eventDate = new Date(event.startTime)
+    return (
+      eventDate.getMonth() === selectedDate.getMonth() &&
+      eventDate.getFullYear() === selectedDate.getFullYear()
+    )
+  })
+
   return (
     <Card className="p-6">
       {/* Custom Header */}
@@ -111,7 +121,7 @@ function CalendarContent({ selectedDate, onDateSelect }: CalendarViewProps) {
         </h2>
 
         <div className="text-sm text-muted-foreground">
-          {events.length} events found
+          {eventsThisMonth.length} events found
         </div>
       </div>
 
