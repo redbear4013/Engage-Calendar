@@ -1,3 +1,5 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Temporarily disable TypeScript errors for deployment
@@ -14,6 +16,15 @@ const nextConfig = {
       optimizePackageImports: ['@supabase/supabase-js', '@tanstack/react-query']
     }
   }),
+  // Webpack configuration to ensure module resolution works
+  webpack: (config, { isServer }) => {
+    // Add fallback for module resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, './src'),
+    }
+    return config
+  },
   images: {
     domains: [
       'localhost',
