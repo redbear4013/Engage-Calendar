@@ -199,19 +199,9 @@ export function createEventImageGallery(
     })
   }
   
-  // Always add a category-specific fallback
-  const fallbackImage = getCategoryDefaultImage(categories, venue, title)
-  
-  // Only add fallback if we don't have an event image, or add it as a second image
+  // Add a category-specific fallback only when no event image is available
   if (images.length === 0) {
-    images.push(fallbackImage)
-  } else if (images.length === 1) {
-    // Add fallback as second image for variety
-    images.push({
-      ...fallbackImage,
-      id: 'fallback',
-      caption: 'Category preview'
-    })
+    images.push(getCategoryDefaultImage(categories, venue, title))
   }
   
   return images
