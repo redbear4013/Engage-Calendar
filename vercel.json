@@ -1,17 +1,20 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/ingest-events",
-      "schedule": "0 */6 * * *"
-    }
-  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
   "functions": {
     "src/app/api/cron/ingest-events/route.ts": {
       "maxDuration": 300
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/ingest-events",
+      "schedule": "0 2 * * *"
+    }
+  ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "buildCommand": "npm run build"
+  }
 }
