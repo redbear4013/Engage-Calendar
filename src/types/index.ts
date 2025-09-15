@@ -26,6 +26,7 @@ export interface Event {
   categories: string[]
   tags: string[]
   imageUrl?: string
+  imageUrls?: string[]
   organizerName?: string
   externalUrl?: string
   lastSeenAt: string

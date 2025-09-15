@@ -156,9 +156,16 @@ export const EventModalContent = ({
   if (!eventData) return null
 
   // Create intelligent image gallery with category-specific fallbacks
-  const validatedImageUrl = validateImageUrl(eventData.imageUrl)
+  const validatedImageUrls = (
+    eventData.imageUrls && eventData.imageUrls.length > 0
+      ? eventData.imageUrls
+      : [eventData.imageUrl]
+  )
+    .map((url) => validateImageUrl(url))
+    .filter((url): url is string => Boolean(url))
+
   const images = createEventImageGallery(
-    validatedImageUrl,
+    validatedImageUrls,
     eventData.title,
     eventData.categories,
     eventData.venueName

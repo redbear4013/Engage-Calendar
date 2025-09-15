@@ -189,6 +189,7 @@ async function processBatch(supabaseAdmin: any, events: Partial<Event>[]): Promi
             categories: event.categories,
             tags: event.tags,
             image_url: event.imageUrl,
+            image_urls: event.imageUrls,
             organizer_name: event.organizerName,
             external_url: event.externalUrl,
             last_seen_at: new Date().toISOString()
@@ -221,6 +222,7 @@ async function processBatch(supabaseAdmin: any, events: Partial<Event>[]): Promi
             categories: event.categories || ['local_events'],
             tags: event.tags || [],
             image_url: event.imageUrl,
+            image_urls: event.imageUrls,
             organizer_name: event.organizerName,
             external_url: event.externalUrl,
             last_seen_at: event.lastSeenAt || new Date().toISOString()
