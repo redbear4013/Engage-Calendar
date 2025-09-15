@@ -365,6 +365,9 @@ export class SandsScraper extends BaseScraper implements MacauScraper {
       // Determine categories
       const categories = this.categorizeEvent(title, description, this.venue)
 
+      // Extract up to three images
+      const imageUrls = this.extractImageUrls($, $element, this.baseUrl)
+
       const event: RawEvent = {
         source: this.venue,
         source_id: createSourceId(title, parsedDate.start, venue, this.getDomainFromUrl(this.baseUrl)),
@@ -376,7 +379,8 @@ export class SandsScraper extends BaseScraper implements MacauScraper {
         city: 'Macau',
         url: eventUrl,
         ticket_url: ticketUrl || undefined,
-        image_url: this.extractImageUrl($, $element, this.baseUrl),
+        image_url: imageUrls[0],
+        image_urls: imageUrls,
         categories
       }
 
@@ -467,13 +471,18 @@ export class SandsScraper extends BaseScraper implements MacauScraper {
         ticketUrl = this.safeAttr($cotaiLink, 'href') || ticketUrl
       }
 
+      // Extract up to three images from detail page
+      const detailImages = this.extractDetailPageImages($, this.baseUrl)
+      const combinedImages = detailImages.length > 0 ? detailImages : (event.image_urls || [])
+
       return {
         ...event,
         description: enhancedDescription,
         start: enhancedDate,
         venue: enhancedVenue,
         ticket_url: ticketUrl,
-        image_url: this.extractDetailPageImage($, this.baseUrl) || event.image_url
+        image_url: combinedImages[0] || event.image_url,
+        image_urls: combinedImages.length > 0 ? combinedImages : event.image_urls
       }
 
     } catch (error) {

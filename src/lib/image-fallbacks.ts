@@ -182,28 +182,30 @@ export function getCategoryDefaultImage(categories: string[] = [], venue?: strin
  * Create image gallery from event data with intelligent fallbacks
  */
 export function createEventImageGallery(
-  imageUrl?: string | null,
+  imageUrls: string[] = [],
   title?: string,
   categories?: string[],
   venue?: string
 ): EventImageData[] {
   const images: EventImageData[] = []
-  
-  // Add actual event image if available
-  if (imageUrl && imageUrl.trim()) {
-    images.push({
-      id: 'event-image',
-      url: imageUrl,
-      alt: title || 'Event image',
-      caption: 'Event photo'
-    })
-  }
-  
+
+  // Add actual event images if available (limit to 3)
+  imageUrls.slice(0, 3).forEach((url, index) => {
+    if (url && url.trim()) {
+      images.push({
+        id: index === 0 ? 'event-image' : `event-image-${index}`,
+        url,
+        alt: title || 'Event image',
+        caption: 'Event photo'
+      })
+    }
+  })
+
   // Add a category-specific fallback only when no event image is available
   if (images.length === 0) {
     images.push(getCategoryDefaultImage(categories, venue, title))
   }
-  
+
   return images
 }
 

@@ -176,9 +176,14 @@ export class BaseScraper {
   }
 
   /**
-   * Extract image URL from element using common selectors
+   * Extract multiple image URLs from an element using common selectors
    */
-  protected extractImageUrl($: cheerio.CheerioAPI, $element: cheerio.Cheerio<AnyNode>, baseUrl: string): string | undefined {
+  protected extractImageUrls(
+    $: cheerio.CheerioAPI,
+    $element: cheerio.Cheerio<AnyNode>,
+    baseUrl: string,
+    maxImages = 3
+  ): string[] {
     const imageSelectors = [
       'img[src]',
       '.image img[src]',
@@ -189,12 +194,17 @@ export class BaseScraper {
       '.main-image img[src]',
       '[style*="background-image"]'
     ]
-    
+
+    const images: string[] = []
+
     for (const selector of imageSelectors) {
-      const $img = $element.find(selector).first()
-      if ($img.length > 0) {
+      const $imgs = $element.find(selector)
+      $imgs.each((_, el) => {
+        if (images.length >= maxImages) return false
+
         let src = ''
-        
+        const $img = $(el)
+
         if (selector.includes('background-image')) {
           // Extract from CSS background-image
           const style = this.safeAttr($img, 'style') || ''
@@ -206,27 +216,49 @@ export class BaseScraper {
           // Regular img src
           src = this.safeAttr($img, 'src') || ''
         }
-        
+
         // Validate image URL
-        if (src && 
-            !src.includes('placeholder') && 
-            !src.includes('default') && 
-            !src.includes('logo') &&
-            !src.includes('icon') &&
-            !src.endsWith('.svg') &&
-            src.length > 10) {
-          return this.createAbsoluteUrl(baseUrl, src)
+        if (
+          src &&
+          !src.includes('placeholder') &&
+          !src.includes('default') &&
+          !src.includes('logo') &&
+          !src.includes('icon') &&
+          !src.endsWith('.svg') &&
+          src.length > 10
+        ) {
+          const absolute = this.createAbsoluteUrl(baseUrl, src)
+          if (!images.includes(absolute)) {
+            images.push(absolute)
+          }
         }
-      }
+      })
+
+      if (images.length >= maxImages) break
     }
-    
-    return undefined
+
+    return images
   }
 
   /**
-   * Extract high-quality image from detail page meta tags and hero sections
+   * Extract a single image URL for backward compatibility
    */
-  protected extractDetailPageImage($: cheerio.CheerioAPI, baseUrl: string): string | undefined {
+  protected extractImageUrl(
+    $: cheerio.CheerioAPI,
+    $element: cheerio.Cheerio<AnyNode>,
+    baseUrl: string
+  ): string | undefined {
+    return this.extractImageUrls($, $element, baseUrl, 1)[0]
+  }
+
+  /**
+   * Extract high-quality images from detail page meta tags and hero sections
+   */
+  protected extractDetailPageImages(
+    $: cheerio.CheerioAPI,
+    baseUrl: string,
+    maxImages = 3
+  ): string[] {
     const detailImageSelectors = [
       'meta[property="og:image"]',
       'meta[name="twitter:image"]',
@@ -235,34 +267,56 @@ export class BaseScraper {
       '.main-image img[src]',
       '.event-banner img[src]',
       '.featured-image img[src]',
-      '.gallery img[src]:first',
-      '.slideshow img[src]:first',
+      '.gallery img[src]',
+      '.slideshow img[src]',
       '.event-header img[src]'
     ]
-    
+
+    const images: string[] = []
+
     for (const selector of detailImageSelectors) {
-      const $img = $(selector).first()
-      if ($img.length > 0) {
+      const $imgs = $(selector)
+      $imgs.each((_, el) => {
+        if (images.length >= maxImages) return false
+
         let src = ''
-        
+        const $img = $(el)
+
         if (selector.includes('meta')) {
           src = this.safeAttr($img, 'content') || ''
         } else {
           src = this.safeAttr($img, 'src') || ''
         }
-        
-        if (src && 
-            !src.includes('placeholder') && 
-            !src.includes('default') && 
-            !src.includes('logo') &&
-            !src.includes('icon') &&
-            src.length > 10) {
-          return this.createAbsoluteUrl(baseUrl, src)
+
+        if (
+          src &&
+          !src.includes('placeholder') &&
+          !src.includes('default') &&
+          !src.includes('logo') &&
+          !src.includes('icon') &&
+          src.length > 10
+        ) {
+          const absolute = this.createAbsoluteUrl(baseUrl, src)
+          if (!images.includes(absolute)) {
+            images.push(absolute)
+          }
         }
-      }
+      })
+
+      if (images.length >= maxImages) break
     }
-    
-    return undefined
+
+    return images
+  }
+
+  /**
+   * Extract a single detail page image for backward compatibility
+   */
+  protected extractDetailPageImage(
+    $: cheerio.CheerioAPI,
+    baseUrl: string
+  ): string | undefined {
+    return this.extractDetailPageImages($, baseUrl, 1)[0]
   }
 
   /**

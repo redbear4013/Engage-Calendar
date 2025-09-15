@@ -13,7 +13,8 @@ export interface RawEvent {
   city: string              // Allow any city for AI scraper
   url: string               // detail page URL
   ticket_url?: string       // if available
-  image_url?: string        // event image if available
+  image_url?: string        // primary event image if available
+  image_urls?: string[]     // additional event images (max 3)
   price_min?: number
   categories?: string[]
 }

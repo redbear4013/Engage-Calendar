@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS events (
   categories TEXT[] DEFAULT ARRAY['local_events'],
   tags TEXT[],
   image_url TEXT,
+  image_urls TEXT[],
   organizer_name TEXT,
   external_url TEXT,
   last_seen_at TIMESTAMPTZ DEFAULT now(),
@@ -296,6 +297,7 @@ RETURNS TABLE (
   country TEXT,
   categories TEXT[],
   image_url TEXT,
+  image_urls TEXT[],
   external_url TEXT
 ) AS $$
 BEGIN
@@ -312,6 +314,7 @@ BEGIN
     e.country,
     e.categories,
     e.image_url,
+    e.image_urls,
     e.external_url
   FROM events e
   WHERE e.city ILIKE '%' || city_name || '%'
@@ -334,6 +337,7 @@ RETURNS TABLE (
   country TEXT,
   categories TEXT[],
   image_url TEXT,
+  image_urls TEXT[],
   external_url TEXT,
   note TEXT,
   saved_at TIMESTAMPTZ
@@ -352,6 +356,7 @@ BEGIN
     e.country,
     e.categories,
     e.image_url,
+    e.image_urls,
     e.external_url,
     se.note,
     se.created_at as saved_at

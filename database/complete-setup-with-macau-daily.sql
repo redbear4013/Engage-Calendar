@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS events (
   categories TEXT[] DEFAULT ARRAY['local_events'],
   tags TEXT[],
   image_url TEXT,
+  image_urls TEXT[],
   organizer_name TEXT,
   external_url TEXT,
   last_seen_at TIMESTAMPTZ DEFAULT now(),

@@ -82,6 +82,7 @@ export function useEvents(options: UseEventsOptions = {}) {
         categories: event.categories || [],
         tags: event.tags || [],
         imageUrl: event.image_url,
+        imageUrls: event.image_urls || [],
         organizerName: event.organizer_name,
         externalUrl: event.external_url,
         lastSeenAt: event.last_seen_at,

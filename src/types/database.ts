@@ -52,6 +52,7 @@ export interface Database {
           categories: string[]
           tags: string[]
           image_url: string | null
+          image_urls: string[] | null
           organizer_name: string | null
           external_url: string | null
           last_seen_at: string
@@ -74,6 +75,7 @@ export interface Database {
           categories?: string[]
           tags?: string[]
           image_url?: string | null
+          image_urls?: string[] | null
           organizer_name?: string | null
           external_url?: string | null
           last_seen_at?: string
@@ -96,6 +98,7 @@ export interface Database {
           categories?: string[]
           tags?: string[]
           image_url?: string | null
+          image_urls?: string[] | null
           organizer_name?: string | null
           external_url?: string | null
           last_seen_at?: string

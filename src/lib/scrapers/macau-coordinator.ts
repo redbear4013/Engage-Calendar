@@ -170,7 +170,8 @@ export class MacauCoordinator {
         lng: this.getApproximateLongitude(rawEvent.source),
         categories: categories,
         tags: tags,
-        imageUrl: rawEvent.image_url,
+        imageUrl: rawEvent.image_url || rawEvent.image_urls?.[0],
+        imageUrls: rawEvent.image_urls,
         organizerName: this.getOrganizerName(rawEvent.source),
         externalUrl: rawEvent.url,
         lastSeenAt: new Date().toISOString()
